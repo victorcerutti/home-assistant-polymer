@@ -74,12 +74,54 @@ class StateHistoryChartTimeline extends Polymer.Element {
 
     dataTable.addColumn({ type: 'string', id: 'Entity' });
     dataTable.addColumn({ type: 'string', id: 'State' });
+    dataTable.addColumn({ type: 'string', role: 'tooltip', p: { html: true } });
     dataTable.addColumn({ type: 'date', id: 'Start' });
     dataTable.addColumn({ type: 'date', id: 'End' });
 
+
     function addRow(entityDisplay, stateStr, start, end) {
       var stateDisplay = stateStr.replace(/_/g, ' ');
-      dataTable.addRow([entityDisplay, stateDisplay, start, end]);
+
+      var dateFormat = new google.visualization.DateFormat({
+            pattern: 'h:mm a'
+        });
+
+      function diffTime(start,end) {
+        var milisec_diff = new Date( end ).getTime() - new Date( start ).getTime();
+        console.log(milisec_diff)
+        var days = Math.floor(milisec_diff / 1000 / 60 / (60 * 24));
+        console.log(days)
+        var date_diff = new Date( milisec_diff );
+        console.log(date_diff)
+        console.log(date_diff.getHours());
+        console.warn(days + " Days "+ date_diff.getHours() + " Hours " + date_diff.getMinutes() + " Minutes " + date_diff.getSeconds() + " Seconds")
+        var tooltip = ""+days + " Days "+ date_diff.getHours() + " Hours " + date_diff.getMinutes() + " Minutes " + date_diff.getSeconds() + " Seconds";
+        console.log(typeof tooltip);
+        return tooltip;
+
+      }
+
+      var tooltip = '<ul class="google-visualization-tooltip-item-list">'
+        + '<li class="google-visualization-tooltip-item" style="">'
+        + '<span style="font-family: Arial; font-size: 12px; color: rgb(0, 0, 0); margin: 0px; text-decoration: none; font-weight: bold;">'+stateDisplay+'</span>'
+        + '</li>'
+        + '</ul>'
+        + '<div class="google-visualization-tooltip-separator"></div>'
+        + '<ul class="google-visualization-tooltip-item-list">'
+        + '<li class="google-visualization-tooltip-item" style="">'
+        + '<span style="font-family: Arial; font-size: 12px; color: rgb(0, 0, 0); margin: 0px; text-decoration: none; font-weight: bold;">'+entityDisplay+':</span> '
+        + '<span style="font-family: Arial; font-size: 12px; color: rgb(0, 0, 0); margin: 0px; text-decoration: none;">'
+        + dateFormat.formatValue(start)+' - '+dateFormat.formatValue(end)
+        + '</span>'
+        + '</li>'
+        + '<li class="google-visualization-tooltip-item" style="">'
+        + '<span style="font-family: Arial; font-size: 12px; color: rgb(0, 0, 0); margin: 0px; text-decoration: none; font-weight: bold;">Duration:</span> '
+        + '<span style="font-family: Arial; font-size: 12px; color: rgb(0, 0, 0); margin: 0px; text-decoration: none;">'+diffTime(start,end)
+        +'</span>'
+        + '</li>'
+        + '</ul>'
+
+      dataTable.addRow([entityDisplay, stateDisplay, tooltip, start, end]);
     }
 
     startTime = new Date(stateHistory.reduce(function (minTime, stateInfo) {
@@ -147,6 +189,8 @@ class StateHistoryChartTimeline extends Polymer.Element {
       numTimelines++;
     });
 
+    console.log(dataTable);
+
     chart.draw(dataTable, {
       backgroundColor: '#fafafa',
 
@@ -159,6 +203,11 @@ class StateHistoryChartTimeline extends Polymer.Element {
       hAxis: {
         format: format
       },
+
+      tooltip: {
+        isHtml: true
+      }
+
     });
   }
 }
